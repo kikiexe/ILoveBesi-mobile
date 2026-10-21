@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { supabase } from "./src/lib/supabase";
@@ -13,6 +14,9 @@ import DashboardScreen from "./src/screens/DashboardScreen";
 import SalesScreen from "./src/screens/SalesScreen";
 import StockScreen from "./src/screens/StockScreen";
 import ReceivablesScreen from "./src/screens/ReceivablesScreen";
+import UpdateModal from "./src/components/UpdateModal";
+import { useAppUpdate } from "./src/hooks/useAppUpdate";
+import { CURRENT_APP_VERSION } from "./src/services/updateService";
 
 type Tab = "ringkasan" | "penjualan" | "stok" | "piutang";
 
@@ -20,13 +24,26 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("ringkasan");
 
+  const {
+    updateInfo,
+    isChecking,
+    isModalVisible,
+    hasUpdate,
+    checkUpdates,
+    openDownloadUrl,
+    dismissModal,
+    openModal,
+  } = useAppUpdate();
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session?.user);
+      setIsAuthenticated(Boolean(session?.user));
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session?.user);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session?.user));
     });
 
     return () => subscription.unsubscribe();
@@ -39,13 +56,24 @@ export default function App() {
   if (isAuthenticated === null) {
     return (
       <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color="#1E3A8A" />
         <Text style={styles.loadingText}>Memeriksa sesi login...</Text>
       </View>
     );
   }
 
   if (!isAuthenticated) {
-    return <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <>
+        <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />
+        <UpdateModal
+          visible={isModalVisible}
+          updateInfo={updateInfo}
+          onClose={dismissModal}
+          onDownload={openDownloadUrl}
+        />
+      </>
+    );
   }
 
   return (
@@ -56,12 +84,39 @@ export default function App() {
       <View style={styles.header}>
         <View>
           <Text style={styles.brandTitle}>ILuvBesi</Text>
-          <Text style={styles.brandSubtitle}>Dashboard Bos Toko</Text>
+          <Text style={styles.brandSubtitle}>
+            Dashboard Bos Toko &bull; v{CURRENT_APP_VERSION}
+          </Text>
         </View>
 
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutText}>Keluar</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          {hasUpdate ? (
+            <TouchableOpacity
+              onPress={openModal}
+              style={styles.updateBadgeButton}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.updateBadgeText}>Update Baru</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => checkUpdates(true)}
+              style={styles.checkUpdateButton}
+              disabled={isChecking}
+              activeOpacity={0.8}
+            >
+              {isChecking ? (
+                <ActivityIndicator size="small" color="#BFDBFE" />
+              ) : (
+                <Text style={styles.checkUpdateText}>Cek Update</Text>
+              )}
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Keluar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Screen Body */}
@@ -79,7 +134,12 @@ export default function App() {
           onPress={() => setActiveTab("ringkasan")}
           activeOpacity={0.8}
         >
-          <Text style={[styles.navText, activeTab === "ringkasan" && styles.navTextActive]}>
+          <Text
+            style={[
+              styles.navText,
+              activeTab === "ringkasan" && styles.navTextActive,
+            ]}
+          >
             Ringkasan
           </Text>
         </TouchableOpacity>
@@ -89,7 +149,12 @@ export default function App() {
           onPress={() => setActiveTab("penjualan")}
           activeOpacity={0.8}
         >
-          <Text style={[styles.navText, activeTab === "penjualan" && styles.navTextActive]}>
+          <Text
+            style={[
+              styles.navText,
+              activeTab === "penjualan" && styles.navTextActive,
+            ]}
+          >
             Penjualan
           </Text>
         </TouchableOpacity>
@@ -99,7 +164,12 @@ export default function App() {
           onPress={() => setActiveTab("stok")}
           activeOpacity={0.8}
         >
-          <Text style={[styles.navText, activeTab === "stok" && styles.navTextActive]}>
+          <Text
+            style={[
+              styles.navText,
+              activeTab === "stok" && styles.navTextActive,
+            ]}
+          >
             Stok Barang
           </Text>
         </TouchableOpacity>
@@ -109,11 +179,24 @@ export default function App() {
           onPress={() => setActiveTab("piutang")}
           activeOpacity={0.8}
         >
-          <Text style={[styles.navText, activeTab === "piutang" && styles.navTextActive]}>
+          <Text
+            style={[
+              styles.navText,
+              activeTab === "piutang" && styles.navTextActive,
+            ]}
+          >
             Piutang
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Dialog Pembaruan Rilis */}
+      <UpdateModal
+        visible={isModalVisible}
+        updateInfo={updateInfo}
+        onClose={dismissModal}
+        onDownload={openDownloadUrl}
+      />
     </SafeAreaView>
   );
 }
@@ -130,6 +213,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   loadingText: {
+    marginTop: 10,
     color: "#64748B",
     fontSize: 13,
     fontWeight: "bold",
@@ -150,6 +234,37 @@ const styles = StyleSheet.create({
   brandSubtitle: {
     fontSize: 11,
     color: "#93C5FD",
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  updateBadgeButton: {
+    backgroundColor: "#16A34A",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 4,
+  },
+  updateBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+  checkUpdateButton: {
+    borderWidth: 1,
+    borderColor: "#3B82F6",
+    backgroundColor: "#1E40AF",
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 4,
+    minWidth: 70,
+    alignItems: "center",
+  },
+  checkUpdateText: {
+    color: "#DBEAFE",
+    fontSize: 11,
+    fontWeight: "600",
   },
   logoutButton: {
     borderWidth: 1,

@@ -10,6 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { supabase } from "../lib/supabase";
+import { CURRENT_APP_VERSION } from "../services/updateService";
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -118,6 +119,12 @@ export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             <Text style={styles.buttonText}>Masuk ke Sistem Toko</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.footerVersion}>
+          <Text style={styles.footerVersionText}>
+            Versi Aplikasi v{CURRENT_APP_VERSION}
+          </Text>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -204,5 +211,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  footerVersion: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  footerVersionText: {
+    fontSize: 11,
+    color: "#94A3B8",
+    fontWeight: "500",
   },
 });
