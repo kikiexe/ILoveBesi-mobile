@@ -10,10 +10,11 @@ import { StatusBar } from "expo-status-bar";
 import { supabase } from "./src/lib/supabase";
 import LoginScreen from "./src/screens/LoginScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
+import SalesScreen from "./src/screens/SalesScreen";
 import StockScreen from "./src/screens/StockScreen";
 import ReceivablesScreen from "./src/screens/ReceivablesScreen";
 
-type Tab = "ringkasan" | "stok" | "piutang";
+type Tab = "ringkasan" | "penjualan" | "stok" | "piutang";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -54,7 +55,7 @@ export default function App() {
       {/* Header Bar */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.brandTitle}>ILoveBesi</Text>
+          <Text style={styles.brandTitle}>ILuvBesi</Text>
           <Text style={styles.brandSubtitle}>Dashboard Bos Toko</Text>
         </View>
 
@@ -66,6 +67,7 @@ export default function App() {
       {/* Screen Body */}
       <View style={styles.screenContainer}>
         {activeTab === "ringkasan" && <DashboardScreen />}
+        {activeTab === "penjualan" && <SalesScreen />}
         {activeTab === "stok" && <StockScreen />}
         {activeTab === "piutang" && <ReceivablesScreen />}
       </View>
@@ -79,6 +81,16 @@ export default function App() {
         >
           <Text style={[styles.navText, activeTab === "ringkasan" && styles.navTextActive]}>
             Ringkasan
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.navItem, activeTab === "penjualan" && styles.navItemActive]}
+          onPress={() => setActiveTab("penjualan")}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.navText, activeTab === "penjualan" && styles.navTextActive]}>
+            Penjualan
           </Text>
         </TouchableOpacity>
 
@@ -98,7 +110,7 @@ export default function App() {
           activeOpacity={0.8}
         >
           <Text style={[styles.navText, activeTab === "piutang" && styles.navTextActive]}>
-            Piutang Aktif
+            Piutang
           </Text>
         </TouchableOpacity>
       </View>
@@ -175,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EFF6FF",
   },
   navText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
     color: "#64748B",
   },
