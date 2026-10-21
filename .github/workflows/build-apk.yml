@@ -3,6 +3,7 @@ name: Build Android APK (ILoveBesi Mobile)
 on:
   push:
     tags:
+      - 'v*'
       - 'mobile-v*'
   workflow_dispatch:
 
