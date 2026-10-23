@@ -1,4 +1,4 @@
-export const CURRENT_APP_VERSION = "1.1.0";
+export const CURRENT_APP_VERSION = "1.1.1";
 const GITHUB_LATEST_RELEASE_API =
   "https://api.github.com/repos/kikiexe/ILoveBesi-mobile/releases/latest";
 const FALLBACK_DOWNLOAD_URL =

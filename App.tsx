@@ -4,10 +4,10 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "./src/lib/supabase";
 import LoginScreen from "./src/screens/LoginScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
@@ -20,7 +20,8 @@ import { CURRENT_APP_VERSION } from "./src/services/updateService";
 
 type Tab = "ringkasan" | "penjualan" | "stok" | "piutang";
 
-export default function App() {
+function AppContent() {
+  const insets = useSafeAreaInsets();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("ringkasan");
 
@@ -55,7 +56,12 @@ export default function App() {
 
   if (isAuthenticated === null) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator size="small" color="#1E3A8A" />
         <Text style={styles.loadingText}>Memeriksa sesi login...</Text>
       </View>
@@ -64,7 +70,17 @@ export default function App() {
 
   if (!isAuthenticated) {
     return (
-      <>
+      <View
+        style={[
+          styles.rootContainer,
+          {
+            backgroundColor: "#F8FAFC",
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
+        <StatusBar style="dark" />
         <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />
         <UpdateModal
           visible={isModalVisible}
@@ -72,16 +88,23 @@ export default function App() {
           onClose={dismissModal}
           onDownload={openDownloadUrl}
         />
-      </>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.rootContainer}>
       <StatusBar style="light" />
 
       {/* Header Bar */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top > 0 ? insets.top + 8 : 12,
+          },
+        ]}
+      >
         <View>
           <Text style={styles.brandTitle}>ILuvBesi</Text>
           <Text style={styles.brandSubtitle}>
@@ -128,7 +151,15 @@ export default function App() {
       </View>
 
       {/* Bottom Tabs */}
-      <View style={styles.bottomNav}>
+      <View
+        style={[
+          styles.bottomNav,
+          {
+            paddingBottom: insets.bottom,
+            height: 56 + insets.bottom,
+          },
+        ]}
+      >
         <TouchableOpacity
           style={[styles.navItem, activeTab === "ringkasan" && styles.navItemActive]}
           onPress={() => setActiveTab("ringkasan")}
@@ -197,12 +228,20 @@ export default function App() {
         onClose={dismissModal}
         onDownload={openDownloadUrl}
       />
-    </SafeAreaView>
+    </View>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  rootContainer: {
     flex: 1,
     backgroundColor: "#1E3A8A",
   },

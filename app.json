@@ -2,7 +2,7 @@
   "expo": {
     "name": "ILuvBesi",
     "slug": "ilovebesi-mobile",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,6 +14,7 @@
     },
     "android": {
       "package": "com.ilovebesi.mobile",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#1E3A8A",
         "foregroundImage": "./assets/android-icon-foreground.png",
